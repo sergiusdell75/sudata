@@ -43,8 +43,6 @@ class RunnableDemo implements Runnable {
 public class MeanFilterMain {
 
     /**
-     * @param str
-     * @return strA
      */
     public static class ParserException extends Exception
 {
@@ -65,6 +63,22 @@ public class MeanFilterMain {
         tstr=(flag)?strA[1]:null;
         return tstr;
 }
+    public static String parserValues(String [] strArray, String str){
+        String [] strA;
+        boolean flag=false;
+        int length = strArray.length;
+        String tstr=null;
+        //check if the to parse argument is in the parse stream
+        for (int i=0; i< length;i++){
+            flag=strArray[i].matches("(.*)"+str+"(.*)");
+            if (flag) {
+                strA=strArray[i].split("=");
+                tstr=(str.matches("(.*)"+strA[0]+"(.*)"))?strA[1]:null;
+                break;
+            }
+        } 
+        return tstr; 
+    }
     
     public static void main(String[] args) {
         // TODO code application logic here
@@ -73,26 +87,74 @@ public class MeanFilterMain {
         float v;
         double starttime;
         double endtime;
+        double vel;
         float Value;
         float Value_temp, Val_down, Val_up;
         float ValueMax, ValueMaxM;
-        float sembl_temp, sembl_n,  zmax, xmax, dz, maxz;
+        float sembl_temp, sembl_n, zmax, xmax, dz, maxz;
         float dt, tt, dtnew;
         int ns, itemp, iup, idown, isembl, iz, maxiz, time, nz;
         String str;
-        String Inputfile;
-        String Outputfile;
+        String Infile;
+        String Outfile;
         String Velfile;
-        String Output_name;
         float x, z;
-        try {
-            str=parserValue(args[0]);
-            if (str==null) {
+        try {//parserValue(args[0]);
+            str= parserValues(args, "input");
+            if (str!=null) {
+                Infile=str;
+            } 
+            else {
                 throw new ParserException();
             }
         } catch (ParserException ex) {
-            System.out.println("Input argument$" + "is missing");
+            System.out.println("Input file argument is missing. Use input=");
         }
+        try {
+            str=parserValues(args,"output");
+            if (str!=null) {
+                Outfile=str;
+            } 
+            else {
+                throw new ParserException();
+            }
+        } catch (ParserException ex) {
+            System.out.println("Output file argument is missing. Use output=");
+        }
+        try {
+            str=parserValues(args,"vel");
+            if (str!=null) {
+                vel=Double.parseDouble(str);
+            } 
+            else {
+                throw new ParserException();
+            }
+        } catch (ParserException ex) {
+            System.out.println("Velocity argument is missing. Use vel=");
+        }
+        try {
+            str=parserValues(args,"zmax");
+            if (str!=null) {
+                zmax=Float.parseFloat(str);
+            } 
+            else {
+                throw new ParserException();
+            }
+        } catch (ParserException ex) {
+            System.out.println("Maximum depth argument is missing. Use zmax=");
+        }
+        try {
+            str=parserValues(args,"dz");
+            if (str!=null) {
+                dz=Float.parseFloat(str);
+            } 
+            else {
+                throw new ParserException();
+            }
+        } catch (ParserException ex) {
+            System.out.println("Depth sampling argument is missing. Use dz=");
+        }
+        
     }
 
     
