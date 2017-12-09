@@ -1,0 +1,7 @@
+<#if licenseFirst??>
+${licenseFirst}
+</#if>
+${licensePrefix}Copyright Sergius Dell DevLab
+<#if licenseLast??>
+${licenseLast}
+</#if>
