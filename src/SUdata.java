@@ -7,6 +7,8 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import static java.lang.Math.ceil;
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 /*
  * Copyright Sergius Dell DevLab
  */
@@ -17,14 +19,14 @@ import java.nio.ByteBuffer;
  */
 
 public class SUdata {
-    char [] fname;
+
     int delrt, dt, nt;
-    private final String inname;
-    private final String outname;
+    private final String fname;
+   
     
-     public SUdata(String inname, String outname){
-         this.inname =inname;
-         this.outname =outname;
+     public SUdata(String fname){
+         this.fname =fname;
+         
 }
 
     public  FileInputStream fin = null;
@@ -32,9 +34,38 @@ public class SUdata {
 
     Trace [] traces;
 
-  public void readHeader(){
+  public void readHeader() {
+        int hsize = 0;
+        int dsize = 0;
+        TraceHeader header = null;
+        try {
+            hsize=convertTraceToByteArray(header).length;
+        } catch (IOException ex) {
+            Logger.getLogger(SUdata.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        short scalco;
+        try {
+            fin=new FileInputStream(fname);
+            byte[] hbuffer= new byte[hsize];
+            fin.read(hbuffer);
+            dsize=header.ns*8;
+            int bsize=dsize+hsize;
+            byte[] buffer = new byte[bsize];
+            while (fin.read(buffer) != -1) {
+                
+            }
+        } catch (IOException ex){
+           System.out.println("ERROR: could not open file"+fname);
+           ex.printStackTrace();
+        } 
+        //read header
+        //read trace
+        delrt = (int) (header.delrt);
+        dt = (int) (header.dt);
+        nt = (int) (header.ns); 
   }
   public void readFile(){
+      
   }
  
 
@@ -99,7 +130,7 @@ public class SUdata {
  }
   public void write(){
     try {
-        fout = new FileOutputStream(outname);
+        fout = new FileOutputStream(fname);
         byte[] buffer;
         for (Trace it : traces) {
             writeHeader( it );
@@ -107,7 +138,7 @@ public class SUdata {
             fout.write(buffer);
         }
     } catch (IOException ex){
-        System.out.println("Error writing file '" + outname + "'");
+        System.out.println("Error writing file '" + fname + "'");
     }
   }
   
@@ -125,9 +156,9 @@ public class SUdata {
         FileOutputStream f=null;
         TraceHeader h= new TraceHeader();
         if(append)
-            f= new FileOutputStream(outname, true);
+            f= new FileOutputStream(fname, true);
         else
-	    f= new FileOutputStream(outname, true);
+	    f= new FileOutputStream(fname, true);
         h.cdp=tr.cdp;
 	h.sx=(int)(tr.sx);
 	h.gx=(int)(tr.gx);

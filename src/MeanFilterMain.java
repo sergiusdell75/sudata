@@ -41,9 +41,7 @@ class RunnableDemo implements Runnable {
 
 
 public class MeanFilterMain {
-
-    /**
-     */
+    
     public static class ParserException extends Exception
 {
       // Parameterless Constructor
@@ -81,23 +79,27 @@ public class MeanFilterMain {
     }
     
     public static void main(String[] args) {
-        // TODO code application logic here
+        // TODO code application logic here    
+        if (args.length < 1) {
+            System.out.println("Please provide processing parameters");
+            System.exit(0);
+        }
         float Gx;	
         float Gy;
         float v;
         double starttime;
         double endtime;
-        double vel;
+        double vel = 0;
         float Value;
         float Value_temp, Val_down, Val_up;
         float ValueMax, ValueMaxM;
-        float sembl_temp, sembl_n, zmax, xmax, dz, maxz;
+        float sembl_temp, sembl_n, zmax = 0, dz = 0, maxz = 0;
         float dt, tt, dtnew;
         int ns, itemp, iup, idown, isembl, iz, maxiz, time, nz;
         String str;
-        String Infile;
-        String Outfile;
-        String Velfile;
+        String Infile = null;
+        String Outfile = null;
+        String Velfile = null;
         float x, z;
         try {//parserValue(args[0]);
             str= parserValues(args, "input");
@@ -155,7 +157,24 @@ public class MeanFilterMain {
             System.out.println("Depth sampling argument is missing. Use dz=");
         }
         
-    }
+        SUdata InS = new SUdata(Infile);
+        SUdata OutS = new SUdata(Outfile);
+        //Infile.readFile();
+        
+        dt = (float)(InS.dt);         ///determine the sampling intervall
+        ns = (int)(InS.nt);           ///determine amount of the samples at the input trace
+        dtnew=(float) (dt/1000000.);  ///change from sample intervall in SU form (msec) to the normal form in sec
+        maxiz=(int)(maxz/dz);    ///determine the number of the depth points
+        nz=maxiz+1;                  ///determine amount of the samples at the output trace
 
-    
+        System.out.println("INFO: multithreaded 3D localization of passive seismic events");
+        System.out.println("INFO: Copiright (C), Stefan Duemmong & Sergius Dell");
+        System.out.println("INFO: Using"); 
+        System.out.println("Input: " + Infile);
+        System.out.println("Output: "+ Outfile);
+        System.out.println("Velocity: " + String.valueOf(vel));
+        System.out.println("Depth discretization: "+ String.valueOf(zmax));
+        System.out.println("Depth dampling: "+ String.valueOf(dz));
+    }  
+
 }
