@@ -9,14 +9,23 @@ import static java.lang.Math.ceil;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static jdk.nashorn.internal.objects.ArrayBufferView.buffer;
 /*
  * Copyright Sergius Dell DevLab
  */
 
 /**
- *
- * @author emil
+ * <h1> Defines SU data format read write </h1>
+ * This loads SU-format data and write it to a file
+ * <p>
+ * NormL
+ * @author Sergius Dell DevLab
+ * @version 1.0
+ * @since 2016-03-01
+ 
  */
+
+
 
 public class SUdata {
 
@@ -33,11 +42,16 @@ public class SUdata {
     public  FileOutputStream fout = null;
 
     Trace [] traces;
+    
 
-  public void readHeader() {
+  public void readHeader() throws ClassNotFoundException {
         int hsize = 0;
         int dsize = 0;
         TraceHeader header = null;
+        ClassLoader parentClassLoader = TraceClassLoader.class.getClassLoader();
+        TraceClassLoader classLoader = new TraceClassLoader(parentClassLoader);
+        Class myObjectClass;
+
         try {
             hsize=convertTraceToByteArray(header).length;
         } catch (IOException ex) {
@@ -47,7 +61,9 @@ public class SUdata {
         try {
             fin=new FileInputStream(fname);
             byte[] hbuffer= new byte[hsize];
-            fin.read(hbuffer);
+            int read = fin.read(hbuffer);
+            myObjectClass = classLoader.loadClass("Trace.MyObject");
+            TraceClassLoader.setClassData(hbuffer);
             dsize=header.ns*8;
             int bsize=dsize+hsize;
             byte[] buffer = new byte[bsize];
@@ -56,7 +72,7 @@ public class SUdata {
             }
         } catch (IOException ex){
            System.out.println("ERROR: could not open file"+fname);
-           ex.printStackTrace();
+           Logger.getLogger(SUdata.class.getName()).log(Level.SEVERE, null, ex);
         } 
         //read header
         //read trace
