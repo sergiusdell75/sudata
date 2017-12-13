@@ -3,10 +3,11 @@
  */
 
 /**
- *
- * @author emil
+ * <h1> SU-format srtucture. </h1>
+ * This class mimic the SU header-structure
+ * @author Ser Dell DevLab
  */
-public class TraceHeader {
+public class TraceHeader implements java.io.Serializable {
    // This structure was taken from the Seismic Un*x package
   int tracl;     // trace sequence number within line
   int tracr;     // trace sequence number within reel

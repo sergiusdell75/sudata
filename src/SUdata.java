@@ -1,29 +1,17 @@
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import static java.lang.Math.ceil;
 import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static jdk.nashorn.internal.objects.ArrayBufferView.buffer;
-/*
- * Copyright Sergius Dell DevLab
- */
 
-/**
- * <h1> Defines SU data format read write </h1>
- * This loads SU-format data and write it to a file
- * <p>
- * NormL
- * @author Sergius Dell DevLab
- * @version 1.0
- * @since 2016-03-01
- 
- */
 
 
 
@@ -62,8 +50,6 @@ public class SUdata {
             fin=new FileInputStream(fname);
             byte[] hbuffer= new byte[hsize];
             int read = fin.read(hbuffer);
-            myObjectClass = classLoader.loadClass("Trace.MyObject");
-            TraceClassLoader.setClassData(hbuffer);
             dsize=header.ns*8;
             int bsize=dsize+hsize;
             byte[] buffer = new byte[bsize];
@@ -84,6 +70,18 @@ public class SUdata {
       
   }
  
+  public Trace returnTrace(byte [] buffer){
+        Trace tr=null;
+        try {
+            ByteArrayInputStream ins = new ByteArrayInputStream(buffer) ;
+        @SuppressWarnings("UnusedAssignment")
+            ObjectInputStream in = new ObjectInputStream(ins);
+            tr=(Trace)in.readObject();
+        }catch (IOException | ClassNotFoundException i){
+            System.out.println("Trace object wasn't deserializid.");
+        }
+        return tr;
+}
 
   public void writeHeader( Trace tr ) throws IOException{
     TraceHeader header = new TraceHeader();
@@ -103,7 +101,7 @@ public class SUdata {
     @SuppressWarnings("UnusedAssignment")
     ObjectOutput out = null;
     try {
-        out = new ObjectOutputStream(bos);   
+        out = new ObjectOutputStream(bos);
         out.writeObject(header);
         out.flush();
         byte[] buffer = bos.toByteArray();
