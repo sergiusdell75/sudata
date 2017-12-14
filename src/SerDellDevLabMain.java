@@ -23,19 +23,22 @@ public class SerDellDevLabMain {
      * @throws java.io.IOException
  */          
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        if (args.length < 1) {
-            System.out.println("Please provide processing parameters");
+        if (args.length < 2) {
+            System.out.println("Please provide processing tag and the parameter file");
             System.exit(0);
         }
+        //encode the tag and paramter list
         String procTag=args[0];
         String progParam=null;
         String encoding="UTF-8";
         FileInputStream fis=new FileInputStream(args[1]);
         progParam=getFileContent(fis,encoding);
+        //main loop over processing option
         switch (procTag) {
-            case "":
-                System.out.println("Execution " + procTag);
-                
+            case "mean":
+                System.out.println(procTag + "Executing ");
+                MeanFilterMain MFM = new MeanFilterMain(progParam);
+                MFM.run();
             break;
             default:
                 System.out.println("Default ");

@@ -16,52 +16,76 @@
 public class MeanFilterMain {
     
     MeanFilterMain(String str){
+        this.ns  = 0;
+        this.vel = 0;
+        this.dt  = 0;
+        this.dz  = 0;
+        this.zmax= 0;
         toParse= str.split("\n");
         toParam=new String[]{"input","output","vel","zmax","dz"};
+        parResolve= ParseProcessParameter.parserAllValues(toParse,toParam);
      };
    
     String [] toParse;
     String [] toParam;
+    String [] parResolve;
     
-        float Gx;	
-        float Gy;
-        float v;
-        double starttime;
-        double endtime;
-        double vel = 0;
-        float Value;
-        float Value_temp, Val_down, Val_up;
-        float ValueMax, ValueMaxM;
-        float sembl_temp, sembl_n, zmax = 0, dz = 0, maxz = 0;
-        float dt, tt, dtnew;
-        int ns, itemp, iup, idown, isembl, iz, maxiz, time, nz;
-        float x, z;
-        String str;
-        String Infile = null;
-        String Outfile = null;
-        String Velfile = null;
-        
-        ParseProcessParameter Par =new ParseProcessParameter();
+    String Infile = null;
+    String Outfile = null;
+    
+    float vel;
+    float dt;
+    float dz;
+    float zmax;
+    int ns;
+    
+    void run(){
+        setParams();
+        print();
+        process();
+    }
+    
+    void setParams(){
+        Infile=parResolve[0];   
+        Outfile=parResolve[1];
+        vel=Float.parseFloat(parResolve[2]);
+        zmax=Float.parseFloat(parResolve[3]); 
+        dz=Float.parseFloat(parResolve[4]);
         
         SUdata InS = new SUdata(Infile);
         SUdata OutS = new SUdata(Outfile);
-        
+        dt = (float)(InS.dt);         ///determine the sampling intervall
+        ns = (int)(InS.nt); 
         //Infile.readFile();
-        void setParams(){
-            String [] parResolve= ParseProcessParameter.parserAllValues(toParse,toParam);
-             
-            dt = (float)(InS.dt);         ///determine the sampling intervall
-            ns = (int)(InS.nt);           ///determine amount of the samples at the input trace
-            dtnew=(float) (dt/1000000.);  ///change from sample intervall in SU form (msec) to the normal form in sec
-            maxiz=(int)(maxz/dz);        ///determine the number of the depth points
-            nz=maxiz+1;                  ///determine amount of the samples at the output trace
+                 ///determine amount of the samples at the output trace
         }
   
-        void process(){
+        void print(){
             System.out.println("Input: " + Infile);
             System.out.println("Output: "+ Outfile);
             System.out.println("Velocity: " + String.valueOf(vel));
             System.out.println("Depth discretization: "+ String.valueOf(zmax));
             System.out.println("Depth dampling: "+ String.valueOf(dz));
         }
+       
+        
+    void process(){
+        float Gx;	
+        float Gy;
+        float v;
+        double starttime;
+        double endtime;
+        float Value;
+        float Value_temp, Val_down, Val_up;
+        float sembl_temp, sembl_n, maxz = 0;
+        float tt;
+        int   itemp, iup, idown, isembl, iz;
+        float x, z;
+        float dtnew=(float) (dt/1000000.);  ///change from sample intervall in SU form (msec) to the normal form in sec
+        int maxiz=(int)(zmax/dz);        ///determine the number of the depth points
+        int nz=maxiz+1; 
+    }
+        
+        
+
 }

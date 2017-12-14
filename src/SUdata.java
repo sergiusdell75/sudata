@@ -31,15 +31,23 @@ public class SUdata {
 
     Trace [] traces;
     
-
+    public static int sizeof(Class dataType){
+        if (dataType == null) throw new NullPointerException();
+        if (dataType == int.class    || dataType == Integer.class)   return 4;
+        if (dataType == short.class  || dataType == Short.class)     return 2;
+        if (dataType == byte.class   || dataType == Byte.class)      return 1;
+        if (dataType == char.class   || dataType == Character.class) return 2;
+        if (dataType == long.class   || dataType == Long.class)      return 8;
+        if (dataType == float.class  || dataType == Float.class)     return 4;
+        if (dataType == double.class || dataType == Double.class)    return 8;
+        return 4; // 32-bit memory pointer... 
+        // to use int size = numDouble * sizeof(double.class) + numInt * sizeof(int.class);
+    }
+    
   public void readHeader() throws ClassNotFoundException {
         int hsize = 0;
         int dsize = 0;
         TraceHeader header = null;
-        ClassLoader parentClassLoader = TraceClassLoader.class.getClassLoader();
-        TraceClassLoader classLoader = new TraceClassLoader(parentClassLoader);
-        Class myObjectClass;
-
         try {
             hsize=convertTraceToByteArray(header).length;
         } catch (IOException ex) {
@@ -50,37 +58,43 @@ public class SUdata {
             fin=new FileInputStream(fname);
             byte[] hbuffer= new byte[hsize];
             int read = fin.read(hbuffer);
-            dsize=header.ns*8;
+            header=returnTraceHeader(hbuffer);
+            fin.close(); //close and reopen file. It's fast in this case!
+            //
+            fin=new FileInputStream(fname);
+            dsize=header.ns*sizeof(double.class);
             int bsize=dsize+hsize;
             byte[] buffer = new byte[bsize];
-            while (fin.read(buffer) != -1) {
-                
+            delrt = (int) (header.delrt);
+            dt = (int) (header.dt);
+            nt = (int) (header.ns); 
+            while (fin.read(buffer) != -1) { 
+            //read header
+            //read trace
+                //System.arraycopy(tr.data, 0, this.data, 0, nt)
             }
         } catch (IOException ex){
            System.out.println("ERROR: could not open file"+fname);
            Logger.getLogger(SUdata.class.getName()).log(Level.SEVERE, null, ex);
         } 
-        //read header
-        //read trace
-        delrt = (int) (header.delrt);
-        dt = (int) (header.dt);
-        nt = (int) (header.ns); 
+
   }
+  
   public void readFile(){
       
   }
  
-  public Trace returnTrace(byte [] buffer){
-        Trace tr=null;
+  public TraceHeader returnTraceHeader(byte [] buffer){
+        TraceHeader trh=null;
         try {
             ByteArrayInputStream ins = new ByteArrayInputStream(buffer) ;
         @SuppressWarnings("UnusedAssignment")
             ObjectInputStream in = new ObjectInputStream(ins);
-            tr=(Trace)in.readObject();
+            trh=(TraceHeader)in.readObject();
         }catch (IOException | ClassNotFoundException i){
             System.out.println("Trace object wasn't deserializid.");
         }
-        return tr;
+        return trh;
 }
 
   public void writeHeader( Trace tr ) throws IOException{
