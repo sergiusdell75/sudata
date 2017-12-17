@@ -63,6 +63,10 @@ public class Trace {
           fldr= 0;
           this.nt = nt;
     }
+
+    Trace() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     private void copyTrace(final Trace tr ){
          cdp = tr.cdp;
          fldr = tr.fldr;

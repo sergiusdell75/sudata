@@ -26,7 +26,7 @@ public class SerDellDevLabMain {
  */          
     public static void main(String[] args) throws FileNotFoundException, IOException {
         if (args.length < 2) {
-            System.out.println("Please provide processing tag and the parameter file");
+            System.out.println("Please provide processing tag and the parameter file.");
             System.exit(0);
         }
         //encode the tag and paramter list
@@ -35,14 +35,14 @@ public class SerDellDevLabMain {
         String encoding="UTF-8";
         FileInputStream fis=new FileInputStream(args[1]);
         progParam=getFileContent(fis,encoding);
-        //main loop over processing option
+        //main loop over processing options
         switch (procTag) {
-            case "mean":
+            case "msel":
                 System.out.println(procTag + "Executing ");
                 MeanFilterMain MFM = new MeanFilterMain(progParam);
         {
             try {
-                MFM.run();
+                MFM.myRun();
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(SerDellDevLabMain.class.getName()).log(Level.SEVERE, null, ex);
             }
