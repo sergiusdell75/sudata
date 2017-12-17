@@ -39,13 +39,13 @@ public class MeanFilterMain {
     float zmax;
     int ns;
     
-    void run(){
+    void run() throws ClassNotFoundException{
         setParams();
         print();
         process();
     }
     
-    void setParams(){
+    void setParams() throws ClassNotFoundException{
         Infile=parResolve[0];   
         Outfile=parResolve[1];
         vel=Float.parseFloat(parResolve[2]);
@@ -54,10 +54,13 @@ public class MeanFilterMain {
         
         SUdata InS = new SUdata(Infile);
         SUdata OutS = new SUdata(Outfile);
+        
+        // read file
+        InS.readFile();
         dt = (float)(InS.dt);         ///determine the sampling intervall
         ns = (int)(InS.nt); 
-        //Infile.readFile();
-                 ///determine amount of the samples at the output trace
+      
+         
         }
   
         void print(){

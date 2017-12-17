@@ -4,6 +4,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
  * Copyright Sergius Dell DevLab
@@ -38,7 +40,13 @@ public class SerDellDevLabMain {
             case "mean":
                 System.out.println(procTag + "Executing ");
                 MeanFilterMain MFM = new MeanFilterMain(progParam);
+        {
+            try {
                 MFM.run();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(SerDellDevLabMain.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
             break;
             default:
                 System.out.println("Default ");

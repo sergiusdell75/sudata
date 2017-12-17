@@ -9,6 +9,10 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import static java.lang.Math.ceil;
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,7 +33,7 @@ public class SUdata {
     public  FileInputStream fin = null;
     public  FileOutputStream fout = null;
 
-    Trace [] traces;
+    List<Trace> traces;
     
     public static int sizeof(Class dataType){
         if (dataType == null) throw new NullPointerException();
@@ -44,10 +48,41 @@ public class SUdata {
         // to use int size = numDouble * sizeof(double.class) + numInt * sizeof(int.class);
     }
     
-  public void readHeader() throws ClassNotFoundException {
+    
+    public void ConvertTraceHeader(TraceHeader h, Trace oneTr){
+        oneTr.dt=h.dt;
+        oneTr.delrt=h.delrt;
+        oneTr.dt=h.dt;
+        oneTr.f1=h.f1;
+        oneTr.f2=h.f2;
+        oneTr.d1=h.d1;
+        oneTr.d2=h.d2;
+        oneTr.sx=h.sx;
+        oneTr.sy=h.sy;
+        oneTr.gx=h.gx;
+        oneTr.gy=h.gy;
+        oneTr.cdp=h.cdp;
+        oneTr.fldr=h.fldr;
+        oneTr.nt=h.ns;
+    }
+    
+    public double [] ExtractData(byte [] dbuffer){
+        double [] data=null;
+        int i=0;
+        ByteBuffer bb = ByteBuffer.wrap(dbuffer);
+        DoubleBuffer db = ((ByteBuffer) bb.rewind()).asDoubleBuffer();
+        while (db.hasRemaining())
+            data[i]= db.get();
+        return data;
+    }
+    
+    @SuppressWarnings("null")
+  public void readFile() throws ClassNotFoundException {
         int hsize = 0;
         int dsize = 0;
         TraceHeader header = null;
+        traces = new ArrayList<>();
+        Trace oneTr=null;
         try {
             hsize=convertTraceToByteArray(header).length;
         } catch (IOException ex) {
@@ -64,14 +99,21 @@ public class SUdata {
             fin=new FileInputStream(fname);
             dsize=header.ns*sizeof(double.class);
             int bsize=dsize+hsize;
+            byte[] dbuffer= new byte[dsize];
             byte[] buffer = new byte[bsize];
             delrt = (int) (header.delrt);
             dt = (int) (header.dt);
             nt = (int) (header.ns); 
             while (fin.read(buffer) != -1) { 
-            //read header
-            //read trace
-                //System.arraycopy(tr.data, 0, this.data, 0, nt)
+            //copy header part
+                hbuffer = Arrays.copyOfRange(buffer, 1, hsize);
+                header=returnTraceHeader(hbuffer);
+                ConvertTraceHeader(header,oneTr);
+            //copy trace part
+                dbuffer = Arrays.copyOfRange(buffer, hsize, bsize);
+                double [] trdata = ExtractData(dbuffer);
+                System.arraycopy(trdata, 0, oneTr.data, 0, nt);
+                traces.add(oneTr);
             }
         } catch (IOException ex){
            System.out.println("ERROR: could not open file"+fname);
@@ -80,7 +122,7 @@ public class SUdata {
 
   }
   
-  public void readFile(){
+  public void readHeader(){
       
   }
  
