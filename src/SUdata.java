@@ -89,7 +89,9 @@ public class SUdata {
             Logger.getLogger(SUdata.class.getName()).log(Level.SEVERE, null, ex);
         }
         short scalco;
-        try {
+        try //<editor-fold defaultstate="collapsed" desc="debugging">
+        {
+//</editor-fold>
             fin=new FileInputStream(fname);
             byte[] hbuffer= new byte[hsize];
             int read = fin.read(hbuffer);

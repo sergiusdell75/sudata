@@ -32,7 +32,7 @@ public class SerDellDevLabMain {
         //encode the tag and paramter list
         String procTag=args[0];
         String progParam=null;
-        String encoding="UTF-8";
+        String encoding="US-ASCII";
         FileInputStream fis=new FileInputStream(args[1]);
         progParam=getFileContent(fis,encoding);
         //main loop over processing options
