@@ -3,3 +3,7 @@
 *.class
 /build/
 *.su
+*.sgy
+header
+binary
+/test/

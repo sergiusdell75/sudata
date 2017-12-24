@@ -1,4 +1,4 @@
-input=./test/seis.su
+input=./test/seis.sgy
 output=./test/loc.su
 vel=1500
 zmax=2000

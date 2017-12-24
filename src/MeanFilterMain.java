@@ -155,7 +155,7 @@ public class MeanFilterMain {
                 otr.data[iz] = (float) ValueMax; /// write value for z
             }
             try {
-                OutS.writeTrace(Outfile,otr,true);
+                OutS.appendTrace(Outfile,otr,true);
             } catch (IOException ex) {
                 Logger.getLogger(MeanFilterMain.class.getName()).log(Level.SEVERE, null, ex);
             }

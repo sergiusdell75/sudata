@@ -103,17 +103,18 @@ public class SUdata {
             nbytesRead += nRead;
             if (nRead != LEN_REEL_HDR)  
                 throw new IOException("Error reading SEG-Y reel header: " + nRead + "!=" + LEN_REEL_HDR);
+            System.out.println("header " + reelHdrBuffer);
             ByteBuffer binaryHdrBuffer = ByteBuffer.allocate(LEN_BINARY_HDR);
             nRead = inputChannel.read(binaryHdrBuffer);
             nbytesRead += nRead;
             if (nRead != LEN_BINARY_HDR)
                 throw new IOException("Error reading SEG-Y binary header: " + nRead + "!=" + LEN_BINARY_HDR);
     // This magically makes all of the value come out properly when retrieved.  Nice!
-            binaryHdrBuffer.order(ByteOrder.BIG_ENDIAN);
+            binaryHdrBuffer.order(ByteOrder.nativeOrder()); 
             ntr = binaryHdrBuffer.getShort(12);
             System.out.println("Number of traces = " + ntr);
             dt= (int)binaryHdrBuffer.getShort(16);
-            ds = dt/ 1000.0F;
+            ds = dt*1E-6F;
             System.out.println("Sampling interval= " + ds);
             nt = binaryHdrBuffer.getShort(20);
             System.out.println("Sample per trace= " + nt);
@@ -121,9 +122,9 @@ public class SUdata {
             delrt = binaryHdrBuffer.getShort(24);
             
             ByteBuffer hdrByteBuffer = ByteBuffer.allocateDirect(NBYTES_PER_HDR);
-            hdrByteBuffer.order(ByteOrder.BIG_ENDIAN);
+            hdrByteBuffer.order(ByteOrder.LITTLE_ENDIAN);//nativeOrder());
             ByteBuffer trcByteBuffer = ByteBuffer.allocateDirect(nbytesPerTrace);
-            trcByteBuffer.order(ByteOrder.BIG_ENDIAN);
+            trcByteBuffer.order(ByteOrder.LITTLE_ENDIAN);//nativeOrder());
             IntBuffer hdrBuffer = hdrByteBuffer.asIntBuffer();
             FloatBuffer trcBuffer = trcByteBuffer.asFloatBuffer();
 
@@ -137,8 +138,7 @@ public class SUdata {
                 hdrByteBuffer.position(0);
                 nRead = inputChannel.read(hdrByteBuffer);
                 nbytesRead += nRead;
-                if (nRead == -1) {
-	// We have reached EOF.
+                if (nRead == -1) {// We have reached EOF.
                     finished = true;
                 } else {
                     if (nRead != NBYTES_PER_HDR)
@@ -155,9 +155,9 @@ public class SUdata {
                         //oneTr.fldr = hdrByteBuffer.getShort(16);
                         oneTr.fldr = hdrByteBuffer.getInt(8);  
                         oneTr.cdp = hdrByteBuffer.getInt(20);
-                        oneTr.nt = nt;
-                        oneTr.dt = ds;
-                        oneTr.pos = traceInCount;
+                        oneTr.nt = hdrByteBuffer.getShort(114);
+                        oneTr.dt = hdrByteBuffer.getShort(116);
+                        oneTr.pos = nbytesRead;
                         oneTr.delrt = hdrByteBuffer.getInt(72);
 	                oneTr.sx = hdrByteBuffer.getInt(72);
 	                oneTr.sy = hdrByteBuffer.getInt(76);
@@ -172,12 +172,12 @@ public class SUdata {
                      }
 
 	// Fill the next trace and header.
-	hdrBuffer.position(0);
+	//hdrBuffer.position(0);
 	trcBuffer.position(0);
         trcBuffer.get(oneTr.data);
         boolean addtr = traces.add(oneTr);
         if (addtr!= true )
-            throw new IOException("Failed to add trace: " + traceInCount);
+            throw new IOException("Failed to add trace at: " + nbytesRead +" position");
 	traceInCount++;
 
       }
@@ -193,98 +193,51 @@ public class SUdata {
   }
  
   
-  public void readHeader( byte [] hbuffer){
+  public void readTrHeader( byte [] buffer){
       
   }
- 
-  public TraceHeader returnTraceHeader(byte [] buffer){
-        TraceHeader trh=null;
-
-        return trh;
-}
-
-  public void writeHeader( Trace tr ) throws IOException{
-    TraceHeader header = new TraceHeader();
-    header.sy = tr.sy;
-    header.sx = tr.sx;
-    header.gy = tr.gy;
-    header.gx = tr.gx;
-    header.f1 = tr.f1;
-    header.f2 = tr.f2;
-    header.d1 = tr.d1;
-    header.d2 = tr.d2;
-    header.cdp = tr.cdp;
-    header.delrt = (short) (tr.delrt);
-    header.dt = (short)(tr.dt);
-    header.ns = (short) (tr.nt);
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    @SuppressWarnings("UnusedAssignment")
-    ObjectOutput out = null;
-    try {
-        out = new ObjectOutputStream(bos);
-        out.writeObject(header);
-        out.flush();
-        byte[] buffer = bos.toByteArray();
-        fout.write(buffer);
-    } finally {
-        try {
-        bos.close();
-        } catch (IOException ex) {
-    // ignore close exception
-        }
-    }
-   
+  
+  public void readBinHeader( byte [] buffer){
+      
   }
-    public static byte[] convertToByteArray(float [] value, int nt) {
-      byte[] bytes = new byte[8*nt];
-      ByteBuffer buffer = ByteBuffer.allocate(bytes.length);
-      for (int i=0; i<nt; i++)
-           buffer.putFloat(value[i]);
-      return buffer.array();
 
-  }
+
+  public void writeHeader( Trace tr, ByteBuffer hdrByteBuffer ) throws IOException{
+            hdrByteBuffer.putInt(8,tr.fldr);  
+            hdrByteBuffer.putInt(20,tr.cdp);
+            hdrByteBuffer.putShort(114,(short)tr.nt);
+            hdrByteBuffer.putShort(116,(short)tr.dt);
+            hdrByteBuffer.putInt(72,(int)tr.delrt);
+	    hdrByteBuffer.putInt(72,tr.sx);
+	    hdrByteBuffer.putInt(76,tr.sy);
+            hdrByteBuffer.putInt(80,tr.gx);
+            hdrByteBuffer.putInt(84,tr.gy);
+            hdrByteBuffer.putInt(180,(int)tr.f1);
+            hdrByteBuffer.putInt(184,(int)tr.f1);
+            hdrByteBuffer.putInt(188,(int)tr.d1);
+            hdrByteBuffer.putInt(192,(int)tr.d2);
     
-    public static byte[] convertTraceToByteArray(TraceHeader h) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        @SuppressWarnings("UnusedAssignment")
-        ObjectOutput out = null;
-        try {
-            out = new ObjectOutputStream(bos);   
-            out.writeObject(h);
-            out.flush();
-            byte[] buffer = bos.toByteArray();
-            return buffer;
-        } finally {
-            try {
-                bos.close();
-            } catch (IOException ex) {
-    // ignore close exception
-            }
-        }
- }
+  }
   public void write(){
     try {
-        fout = new FileOutputStream(fname);
-        byte[] buffer;
+        fout = new FileOutputStream(fname);          
+        ByteBuffer hdrByteBuffer = ByteBuffer.allocateDirect(NBYTES_PER_HDR);
+        hdrByteBuffer.order(ByteOrder.LITTLE_ENDIAN);//nativeOrder());
+        ByteBuffer trcByteBuffer = ByteBuffer.allocateDirect(nbytesPerTrace);
+        trcByteBuffer.order(ByteOrder.LITTLE_ENDIAN);//nativeOrder());
+        FloatBuffer trcBuffer = trcByteBuffer.asFloatBuffer();
         for (Trace it : traces) {
-            writeHeader( it );
-            buffer=convertToByteArray(it.data,it.nt);
-            fout.write(buffer);
+            writeHeader( it, hdrByteBuffer );
+            //fout.write(hdrByteBuffer);
+            trcBuffer.position(0);
+            trcBuffer.put(it.data);
         }
     } catch (IOException ex){
         System.out.println("Error writing file '" + fname + "'");
     }
   }
   
-  public void append( Trace tr) throws IOException{ 
-    
- // fout.open( fname, ios::app );
-  writeHeader( tr );
-
- 
-  }
-  
-  public void writeTrace(String name, Trace tr, boolean append) throws IOException{
+  public void appendTrace(String name, Trace tr, boolean append) throws IOException{
      if(tr.data!=null)
     {
         FileOutputStream f=null;
@@ -303,8 +256,8 @@ public class SUdata {
         h.d1=tr.d1;
         h.f2=tr.f2;
         h.d2=tr.d2;
-        byte [] buffer1=convertTraceToByteArray( h );
-        byte [] buffer2=convertToByteArray(tr.data,tr.nt);
+        byte [] buffer1=null;
+        byte [] buffer2=null;
         f.write(buffer1);
         f.write(buffer2);
     }
