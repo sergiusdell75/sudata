@@ -79,9 +79,9 @@ public class MeanFilterMain {
         
         // read file
         InS.readFile();
-        dt = (float)(InS.dt);         ///determine the sampling intervall
-        ns = (int)(InS.nt); 
-        ntr = InS.traces.size();
+        this.dt = (float)(InS.get_ds());         ///determine the sampling intervall
+        this.ns = (int)(InS.get_nt()); 
+        this.ntr = InS.get_ntr(); //traces.size();
          
         }
   

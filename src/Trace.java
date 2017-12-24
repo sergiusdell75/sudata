@@ -9,13 +9,13 @@
  * @author emil
  */
 public class Trace {
-    double [] data;
-    double delrt;
-    double dt;
-    float f1;
-    float f2;
-    float d1;
-    float d2;
+    float [] data;
+    float delrt;
+    float dt;
+    float f1; // cmpx
+    float f2; //cmpy
+    float d1; //il
+    float d2; //xl
     int sx;
     int sy;
     int gx;
@@ -48,7 +48,7 @@ public class Trace {
 }
 
     public Trace(int nt){
-        this.data=new double[nt];
+        this.data=new float[nt];
           delrt = 0;
           dt  = 0;
           f1 = 0;
@@ -82,7 +82,7 @@ public class Trace {
          gx= tr.gx;
          gy= tr.gy; 
          if ( tr.data!=null ){
-             this.data=new double[tr.nt];
+             this.data=new float[tr.nt];
              System.arraycopy(tr.data, 0, this.data, 0, nt);
          }
          else {

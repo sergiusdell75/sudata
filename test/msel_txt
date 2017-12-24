@@ -1,0 +1,6 @@
+input=./test/seis.su
+output=./test/loc.su
+vel=1500
+zmax=2000
+dz=20 
+
