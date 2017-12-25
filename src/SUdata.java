@@ -1,9 +1,6 @@
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
 import static java.lang.Math.ceil;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -12,6 +9,7 @@ import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 
 public class SUdata {
@@ -23,8 +21,11 @@ public class SUdata {
     private FileOutputStream fout = null;
     private FileChannel inputChannel;
     private long nbytesRead;
+    private long nbytesWritten;
     private final  long tracesToDump;
     private int nbytesPerTrace;
+    private int nbytesPerTraceOut;
+    private int minTrace, maxTrace,traceInc;
     
     List<Trace> traces;
     /*package*/ static final int LEN_REEL_HDR = 3200;
@@ -34,6 +35,7 @@ public class SUdata {
    
     
     public SUdata(String fname){
+        this.nbytesWritten = 0L;
         this.tracesToDump = (int) -1L;
         this.nbytesPerTrace = 0;
         this.nbytesRead = 0L;
@@ -44,19 +46,9 @@ public class SUdata {
     public int get_nt(){return this.nt;}
     public int get_ntr(){return this.ntr;}
     public float get_ds(){return this.ds;}
-     
-    public static int sizeof(Class dataType){
-        if (dataType == null) throw new NullPointerException();
-        if (dataType == int.class    || dataType == Integer.class)   return 4;
-        if (dataType == short.class  || dataType == Short.class)     return 2;
-        if (dataType == byte.class   || dataType == Byte.class)      return 1;
-        if (dataType == char.class   || dataType == Character.class) return 2;
-        if (dataType == long.class   || dataType == Long.class)      return 8;
-        if (dataType == float.class  || dataType == Float.class)     return 4;
-        if (dataType == float.class || dataType == Float.class)    return 8;
-        return 4; // 32-bit memory pointer... 
-        // to use int size = numFloat * sizeof(float.class) + numInt * sizeof(int.class);
-    }
+    public void set_minTrace(int minTrace){this.minTrace=minTrace;}
+    public void set_maxTrace(int maxTrace){this.maxTrace=maxTrace;}   
+    public void set_incTrace(int traceInc){this.traceInc=traceInc;}  
     
     
     public void ConvertTraceHeader(TraceHeader h, Trace oneTr){
@@ -218,34 +210,71 @@ public class SUdata {
             hdrByteBuffer.putInt(192,(int)tr.d2);
     
   }
-  public void write(){
+  public void write() throws IOException{
     try {
-        fout = new FileOutputStream(fname);          
+        fout = new FileOutputStream(fname);
+        FileChannel outputChannel = fout.getChannel();
         ByteBuffer hdrByteBuffer = ByteBuffer.allocateDirect(NBYTES_PER_HDR);
         hdrByteBuffer.order(ByteOrder.LITTLE_ENDIAN);//nativeOrder());
+        IntBuffer hdrBuffer = hdrByteBuffer.asIntBuffer();
         ByteBuffer trcByteBuffer = ByteBuffer.allocateDirect(nbytesPerTrace);
         trcByteBuffer.order(ByteOrder.LITTLE_ENDIAN);//nativeOrder());
         FloatBuffer trcBuffer = trcByteBuffer.asFloatBuffer();
-        for (Trace it : traces) {
-            writeHeader( it, hdrByteBuffer );
-            //fout.write(hdrByteBuffer);
-            trcBuffer.position(0);
-            trcBuffer.put(it.data);
-        }
-    } catch (IOException ex){
-        System.out.println("Error writing file '" + fname + "'");
-    }
+        
+        long outputTraceCount = 1L;
+        ListIterator<Trace> litr = traces.listIterator();
+        int traceCounter;
+        boolean writeThisTrace=true;       
+	while (litr.hasNext()) {
+          traceCounter=litr.next().fldr;
+	  if (traceCounter < minTrace) writeThisTrace = false;  // Out of range.
+	  if (traceCounter > maxTrace) writeThisTrace = false;  // Out of range.
+	  if (minTrace == Long.MIN_VALUE) {
+	    if (traceCounter%traceInc != 0) writeThisTrace = false;  // Not on the increment.
+	  } else {
+	    if ((traceCounter-minTrace)%traceInc != 0) writeThisTrace = false;  // Not on the increment.
+	  }
+
+	  if (writeThisTrace) {
+
+	    // Fill the next trace and header.
+	    // hdrBuffer.position(0);
+	    // hdrBuffer.put(_hdrs[j]);
+	    trcBuffer.position(0);
+            writeHeader(litr.next(), hdrByteBuffer );
+	    trcBuffer.put(litr.next().data);
+
+	    // Write the header.
+	    hdrByteBuffer.position(0);
+	    int nWritten = outputChannel.write(hdrByteBuffer);
+	    nbytesWritten += nWritten;
+	    if (nWritten != NBYTES_PER_HDR)
+	      throw new IOException("For file '" + fname
+				    + "' - Error writing SEG-Y trace header " + outputTraceCount
+				    + ": " + nWritten + "!=" + NBYTES_PER_HDR);
+
+	    // Write the trace.
+	    trcByteBuffer.position(0);
+	    trcByteBuffer.limit(nbytesPerTraceOut);
+	    nWritten = outputChannel.write(trcByteBuffer);
+	    nbytesWritten += nWritten;
+	    if (nWritten != nbytesPerTraceOut)
+	      throw new IOException("For file '" + fname
+				    + "' - Error writing SEG-Y trace " + outputTraceCount
+				    + ": " + nWritten + "!=" + nbytesPerTraceOut);
+
+	  }
+	  outputTraceCount++;
+	}
+      } catch (IOException ex) {}
   }
   
-  public void appendTrace(String name, Trace tr, boolean append) throws IOException{
+  public void appendTrace(String name, Trace tr) throws IOException{
      if(tr.data!=null)
     {
         FileOutputStream f=null;
         TraceHeader h= new TraceHeader();
-        if(append)
-            f= new FileOutputStream(fname, true);
-        else
-	    f= new FileOutputStream(fname, true);
+        f= new FileOutputStream(fname, true);
         h.cdp=tr.cdp;
 	h.sx=(int)(tr.sx);
 	h.gx=(int)(tr.gx);

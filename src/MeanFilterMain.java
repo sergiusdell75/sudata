@@ -101,13 +101,16 @@ public class MeanFilterMain {
         float Value_temp, Val_down, Val_up;
         float sembl_temp, sembl_n, maxz = 0;
         float tt;
+        boolean appendTr =false;
         int   itemp, iup, idown, isembl, i, iz;
         float x,y,z;
         float dtnew=(float) (dt/1000000.);  ///change from sample intervall in SU form (msec) to the normal form in sec
         int maxiz=(int)(zmax/dz);        ///determine the number of the depth points
         int nz=maxiz+1;
         ListIterator<Trace> litr = InS.traces.listIterator();
-        Trace otr = new Trace(ns);
+        ListIterator<Trace> oitr = OutS.traces.listIterator();
+        Trace otr =null;
+        otr=new Trace(nz);
         //omp parallel for
         // Xcord, Ycord, data
         i=0;
@@ -122,12 +125,12 @@ public class MeanFilterMain {
            System.out.println("INFO: Processing  current trace : " + String.valueOf(i)
                    + " from " + String.valueOf(ntr) + " trace  is done");
 
-///Loop over all depth points: /////////////////////////////////////////////////
+//Loop over all depth points
             z=(float) 0.0;
             for (iz=0; iz < nz; iz++){
                double ValueMax = 0.;
 
-///Loop over all samples: /////////////////////////////////////////////////
+//Loop over all samples
 	      for (int ii=0; ii<ns; ii++) {
                 ListIterator<Trace> itr = InS.traces.listIterator();
                 Value=(float) 0.;
@@ -154,11 +157,18 @@ public class MeanFilterMain {
                 z+=dz;
                 otr.data[iz] = (float) ValueMax; /// write value for z
             }
-            try {
-                OutS.appendTrace(Outfile,otr,true);
-            } catch (IOException ex) {
-                Logger.getLogger(MeanFilterMain.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            if (appendTr)
+                try{OutS.appendTrace(Outfile,otr);} catch (IOException ex) {}
+            else
+                oitr.add(otr);     
         }  
+        if (appendTr) {
+            System.out.println("Data is in the scratch");
+        } else {
+            OutS.set_maxTrace(OutS.traces.size());
+            OutS.set_minTrace(1);
+            OutS.set_incTrace(1);
+            OutS.write();
+        }
     }
 }
