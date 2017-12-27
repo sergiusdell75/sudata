@@ -7,7 +7,6 @@
  * @author emil
  */
 package SOM;
-
 import java.awt.Color;
 import java.io.IOException;
 import java.io.InputStreamReader;

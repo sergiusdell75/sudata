@@ -19,9 +19,9 @@ import java.util.List;
         private int iteration;
         private int wightsdimension;
         private int sigma0;
-        private double alpha0 = 0.1;
+        private final double alpha0;
         private double tau1;
-        private int tau2 = 1000;
+        private final int tau2;
 
         private double h(Point winnerCoordinate, Functions f) {
             double result = 0;
@@ -111,12 +111,16 @@ import java.util.List;
         public int getIteration(){ return iteration; }       
         public Neuron(int x, int y, int sigma0)
         {
+        this.alpha0 = 0.1;
+        this.tau2 = 1000;
             coordinate.setLocation(x,y);
             InitializeVariables(sigma0);
         }
 
         public Neuron(Point coordinate, int sigma0)
         {
+        this.alpha0 = 0.1;
+        this.tau2 = 1000;
             this.coordinate = coordinate;
             InitializeVariables(sigma0);
         }
