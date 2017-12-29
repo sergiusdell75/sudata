@@ -24,7 +24,8 @@ import java.util.logging.Logger;
 
 class MeanFilterMainThread extends Thread {
     
-    
+    // MeanFilterMainThread
+    //Map
     @Override
     public void run(){
         
@@ -106,23 +107,24 @@ public class MeanFilterMain {
         boolean addCheck;
         int   itemp, iup, idown, isembl, i, iz;
         float x,y,z;
+        float [] data ;
         int trsize; 
         int maxiz=(int)(zmax/dz);        ///determine the number of the depth points
         int nz=maxiz+1;
-        ListIterator<Trace> litr = InS.traces.listIterator();
-  //      ListIterator<Trace> oitr = OutS.traces.listIterator();
+
         OutS.traces = new ArrayList<>();
         Trace otr =null;
         otr=new Trace(nz);
+        data = new float[ns];
+        Trace itr=null;
+        itr=new Trace(ns);
         //omp parallel for
-        // Xcord, Ycord, data
         i=0;
         trsize=InS.traces.size();
-        while(litr.hasNext()){
-           i++;
-         /// Output preparing: ///////////////////////////////////////////////////////////
-           Gx = litr.next().gx;
-           Gy = litr.next().gy;
+        for (i=0; i< trsize; i++){
+           itr=InS.traces.get(i);
+           Gx = itr.gx;
+           Gy = itr.gy;
 	   otr.nt=nz;
 	   otr.gx = (int)Gx;
            otr.gy = (int)Gy;
@@ -132,8 +134,9 @@ public class MeanFilterMain {
 
 //Loop over all depth points
             for (iz=0; iz < nz; iz++){
-                double ValueMax = 0.;
-                for (int ii=0; ii<ns; ii++) ValueMax+=Math.abs(litr.next().data[ii]);
+                double ValueMax = 0;
+                System.arraycopy(itr.data, 0, data, 0, ns);
+                for (int ii=0; ii<ns; ii++) ValueMax+=data[ii];
                 otr.data[iz] = (float) ValueMax; /// write value for z
             }
             if (appendTr)
