@@ -125,8 +125,6 @@ public class SUdata {
 
             boolean finished = false;
             long traceInFileCount = 1L;
-            int traceInCount = 0;
-            int frameKeyLast = Integer.MIN_VALUE;
             oneTr = new Trace(nt);
             while (!finished) {
 
@@ -173,8 +171,6 @@ public class SUdata {
         boolean addtr = traces.add(oneTr);
         if (addtr!= true )
             throw new IOException("Failed to add trace at: " + nbytesRead +" position");
-	traceInCount++;
-
       }
 
       if (tracesToDump >= 0  &&  traceInFileCount >= tracesToDump) finished = true;
@@ -207,7 +203,7 @@ public class SUdata {
     try {
         fout = new FileOutputStream(fname);
         FileChannel outputChannel = fout.getChannel();
-        
+        short dft=1;
         ByteBuffer reelHdrBuffer = ByteBuffer.allocate(LEN_REEL_HDR);
         String reelHdrBufferStr = "This is the header"; 
         //write 3200 bytes ebdic 
@@ -222,7 +218,7 @@ public class SUdata {
         binaryHdrBuffer.putShort(12, (short) ntr);
         binaryHdrBuffer.putShort(16, (short) dtOut);
         binaryHdrBuffer.putShort(20, (short) ntOut);
-        binaryHdrBuffer.putShort(24, (short) delrt);
+        binaryHdrBuffer.putShort(24, (short) dft);
         
         nWritten = outputChannel.write(binaryHdrBuffer);
         nbytesWritten += nWritten;
@@ -239,26 +235,29 @@ public class SUdata {
         FloatBuffer trcBuffer = trcByteBuffer.asFloatBuffer();
         
         long outputTraceCount = 1L;
-        ListIterator<Trace> litr = traces.listIterator();
+        //ListIterator<Trace> litr = traces.listIterator();
+        Trace itr=null;
+        itr = new Trace(ntOut);
         int traceCounter;
-        boolean writeThisTrace=true;       
-	while (litr.hasNext()) {
-          traceCounter=litr.next().fldr;
-	  if (traceCounter < minTrace) writeThisTrace = false;  // Out of range.
-	  if (traceCounter > maxTrace) writeThisTrace = false;  // Out of range.
-	  if (minTrace == Long.MIN_VALUE) {
-	    if (traceCounter%traceInc != 0) writeThisTrace = false;  // Not on the increment.
-	  } else {
-	    if ((traceCounter-minTrace)%traceInc != 0) writeThisTrace = false;  // Not on the increment.
-	  }
+        boolean writeThisTrace=true;     
+	for (int i=0; i< traces.size(); i++) {
+            itr=traces.get(i);
+            traceCounter=itr.fldr;
+            if (traceCounter < minTrace) writeThisTrace = false;  // Out of range.
+            if (traceCounter > maxTrace) writeThisTrace = false;  // Out of range.
+            if (minTrace == Long.MIN_VALUE) {
+                if (traceCounter%traceInc != 0) writeThisTrace = false;  // Not on the increment.
+            } else {
+                if ((traceCounter-minTrace)%traceInc != 0) writeThisTrace = false;  // Not on the increment.
+            }
 
-	  if (writeThisTrace) {
+            if (writeThisTrace) {
 
 	    // Fill the next trace and header.
 	    hdrBuffer.position(0);
 	    trcBuffer.position(0);
-            writeHeader(litr.next(), hdrByteBuffer );
-	    trcBuffer.put(litr.next().data);
+            writeHeader(itr, hdrByteBuffer );
+	    trcBuffer.put(itr.data);
 
 	    // Write the header.
 	    hdrByteBuffer.position(0);
@@ -283,6 +282,7 @@ public class SUdata {
 	  outputTraceCount++;
 	}
       } catch (IOException ex) {}
+    System.out.println("Number of byte written to file: "+nbytesWritten);
   }
   
   public void appendTrace(String name, Trace tr) throws IOException{

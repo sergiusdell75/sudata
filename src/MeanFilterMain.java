@@ -1,9 +1,6 @@
 
 import java.io.IOException;
-import static java.lang.Math.abs;
-import static java.lang.Math.sqrt;
 import java.util.ArrayList;
-import java.util.ListIterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,6 +96,8 @@ public class MeanFilterMain {
     void process(){
         float Gx;	
         float Gy;
+        float Sx;
+        float Sy;
         float Value;
         float Value_temp, Val_down, Val_up;
         float sembl_temp, sembl_n, maxz = 0;
@@ -124,11 +123,23 @@ public class MeanFilterMain {
         for (i=0; i< trsize; i++){
            itr=InS.traces.get(i);
            Gx = itr.gx;
+           Sy = itr.sy;
+           Sx = itr.sx;
            Gy = itr.gy;
+           
 	   otr.nt=nz;
+           otr.fldr=i;
 	   otr.gx = (int)Gx;
            otr.gy = (int)Gy;
-	   otr.dt = (int)(dz*1000);
+           otr.sx = (int)Sx;
+           otr.sy = (int)Sy;
+           otr.cdp=itr.cdp;
+           otr.delrt=itr.delrt;
+           otr.f1=itr.f1;
+           otr.f2=itr.f2;           
+           otr.dt = (int)(dz*1000);
+           otr.d1=itr.d1;
+           otr.d2=itr.d2;          	   
            System.out.println("INFO: Processing  current trace : " + String.valueOf(i)
                    + " from " + String.valueOf(trsize) + " trace  is done");
 
