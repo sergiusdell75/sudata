@@ -2,6 +2,7 @@
 import java.io.IOException;
 import static java.lang.Math.abs;
 import static java.lang.Math.sqrt;
+import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -102,19 +103,23 @@ public class MeanFilterMain {
         float sembl_temp, sembl_n, maxz = 0;
         float tt;
         boolean appendTr =false;
+        boolean addCheck;
         int   itemp, iup, idown, isembl, i, iz;
         float x,y,z;
-        float dtnew=(float) (dt/1000000.);  ///change from sample intervall in SU form (msec) to the normal form in sec
+        int trsize; 
         int maxiz=(int)(zmax/dz);        ///determine the number of the depth points
         int nz=maxiz+1;
         ListIterator<Trace> litr = InS.traces.listIterator();
-        ListIterator<Trace> oitr = OutS.traces.listIterator();
+  //      ListIterator<Trace> oitr = OutS.traces.listIterator();
+        OutS.traces = new ArrayList<>();
         Trace otr =null;
         otr=new Trace(nz);
         //omp parallel for
         // Xcord, Ycord, data
         i=0;
+        trsize=InS.traces.size();
         while(litr.hasNext()){
+           i++;
          /// Output preparing: ///////////////////////////////////////////////////////////
            Gx = litr.next().gx;
            Gy = litr.next().gy;
@@ -123,44 +128,18 @@ public class MeanFilterMain {
            otr.gy = (int)Gy;
 	   otr.dt = (int)(dz*1000);
            System.out.println("INFO: Processing  current trace : " + String.valueOf(i)
-                   + " from " + String.valueOf(ntr) + " trace  is done");
+                   + " from " + String.valueOf(trsize) + " trace  is done");
 
 //Loop over all depth points
-            z=(float) 0.0;
             for (iz=0; iz < nz; iz++){
-               double ValueMax = 0.;
-
-//Loop over all samples
-	      for (int ii=0; ii<ns; ii++) {
-                ListIterator<Trace> itr = InS.traces.listIterator();
-                Value=(float) 0.;
-                sembl_temp=(float) 0.;
-                isembl=0;        
-		while( itr.hasNext()) {
-                        x= Gx - itr.next().gx; 
-                        y= Gy - itr.next().gy; 
-			tt=(float) (ii*dtnew+sqrt(z*z + x*x + y*y)/vel); 
-			idown=(int)(tt/dtnew); 
-                        if (idown >= ns) {
-                            idown=ns-1;
-                        } else {}
-                        iup=1+idown;
-                        Val_down=(float) itr.next().data[idown]; 
-			Val_up=(float) itr.next().data[iup];
-                        Value_temp=Val_down + 
-                                (Val_up-Val_down)*(tt - dtnew*idown)/(dtnew*iup - dtnew*idown);
-                        Value+=Value_temp;
-                     }
-                    Value=abs(Value);
-                    if (Value>ValueMax) ValueMax=Value;
-                }
-                z+=dz;
+                double ValueMax = 0.;
+                for (int ii=0; ii<ns; ii++) ValueMax+=Math.abs(litr.next().data[ii]);
                 otr.data[iz] = (float) ValueMax; /// write value for z
             }
             if (appendTr)
                 try{OutS.appendTrace(Outfile,otr);} catch (IOException ex) {}
             else
-                oitr.add(otr);     
+                 addCheck = OutS.traces.add(otr);     
         }  
         if (appendTr) {
             System.out.println("Data is in the scratch");
@@ -168,7 +147,13 @@ public class MeanFilterMain {
             OutS.set_maxTrace(OutS.traces.size());
             OutS.set_minTrace(1);
             OutS.set_incTrace(1);
-            OutS.write();
+            OutS.set_dtOut((int)(dz*1000));
+            OutS.set_ntOut(nz);
+            try {
+                OutS.write();
+            } catch (IOException ex) {
+                Logger.getLogger(MeanFilterMain.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 }

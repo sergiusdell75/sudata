@@ -15,6 +15,7 @@ import java.util.ListIterator;
 public class SUdata {
 
     private int delrt, dt, ntr, nt;
+    private int dtOut, ntOut;
     private float ds;
     private final String fname;
     private FileInputStream fin = null;
@@ -27,7 +28,7 @@ public class SUdata {
     private int nbytesPerTraceOut;
     private int minTrace, maxTrace,traceInc;
     
-    List<Trace> traces;
+    List<Trace> traces=null;
     /*package*/ static final int LEN_REEL_HDR = 3200;
     /*package*/ static final int LEN_BINARY_HDR = 400;
     /*package*/ static final int NBYTES_PER_HDR = 240;
@@ -35,6 +36,7 @@ public class SUdata {
    
     
     public SUdata(String fname){
+        this.nbytesPerTraceOut = 0;
         this.nbytesWritten = 0L;
         this.tracesToDump = (int) -1L;
         this.nbytesPerTrace = 0;
@@ -48,8 +50,9 @@ public class SUdata {
     public float get_ds(){return this.ds;}
     public void set_minTrace(int minTrace){this.minTrace=minTrace;}
     public void set_maxTrace(int maxTrace){this.maxTrace=maxTrace;}   
-    public void set_incTrace(int traceInc){this.traceInc=traceInc;}  
-    
+    public void set_incTrace(int traceInc){this.traceInc=traceInc;}
+    public void set_dtOut(int dtOut){this.dtOut=dtOut;}
+    public void set_ntOut(int ntOut){this.ntOut=ntOut;}
     
     public void ConvertTraceHeader(TraceHeader h, Trace oneTr){
         oneTr.dt=h.dt;
@@ -184,16 +187,6 @@ public class SUdata {
 
   }
  
-  
-  public void readTrHeader( byte [] buffer){
-      
-  }
-  
-  public void readBinHeader( byte [] buffer){
-      
-  }
-
-
   public void writeHeader( Trace tr, ByteBuffer hdrByteBuffer ) throws IOException{
             hdrByteBuffer.putInt(8,tr.fldr);  
             hdrByteBuffer.putInt(20,tr.cdp);
@@ -214,11 +207,35 @@ public class SUdata {
     try {
         fout = new FileOutputStream(fname);
         FileChannel outputChannel = fout.getChannel();
+        
+        ByteBuffer reelHdrBuffer = ByteBuffer.allocate(LEN_REEL_HDR);
+        String reelHdrBufferStr = "This is the header"; 
+        //write 3200 bytes ebdic 
+        int nWritten = outputChannel.write(reelHdrBuffer);
+        nbytesWritten += nWritten;
+        if (nWritten != LEN_REEL_HDR)  
+                throw new IOException("Error writing SEG-Y reel header: " + nWritten + "!=" + LEN_REEL_HDR);
+        System.out.println("header " + reelHdrBufferStr);
+        
+        ByteBuffer binaryHdrBuffer = ByteBuffer.allocate(LEN_BINARY_HDR);
+        //binaryHdrBuffer.order(ByteOrder.nativeOrder()); 
+        binaryHdrBuffer.putShort(12, (short) ntr);
+        binaryHdrBuffer.putShort(16, (short) dtOut);
+        binaryHdrBuffer.putShort(20, (short) ntOut);
+        binaryHdrBuffer.putShort(24, (short) delrt);
+        
+        nWritten = outputChannel.write(binaryHdrBuffer);
+        nbytesWritten += nWritten;
+        if (nWritten != LEN_BINARY_HDR)  
+                throw new IOException("Error writing SEG-Y binary header: " + nWritten + "!=" + LEN_BINARY_HDR);
+  
         ByteBuffer hdrByteBuffer = ByteBuffer.allocateDirect(NBYTES_PER_HDR);
-        hdrByteBuffer.order(ByteOrder.LITTLE_ENDIAN);//nativeOrder());
+        hdrByteBuffer.order(ByteOrder.nativeOrder());//LITTLE_ENDIAN);;
         IntBuffer hdrBuffer = hdrByteBuffer.asIntBuffer();
-        ByteBuffer trcByteBuffer = ByteBuffer.allocateDirect(nbytesPerTrace);
-        trcByteBuffer.order(ByteOrder.LITTLE_ENDIAN);//nativeOrder());
+        
+        nbytesPerTraceOut = ntOut * 4;
+        ByteBuffer trcByteBuffer = ByteBuffer.allocateDirect(nbytesPerTraceOut);
+        trcByteBuffer.order(ByteOrder.nativeOrder());//LITTLE_ENDIAN);
         FloatBuffer trcBuffer = trcByteBuffer.asFloatBuffer();
         
         long outputTraceCount = 1L;
@@ -238,15 +255,14 @@ public class SUdata {
 	  if (writeThisTrace) {
 
 	    // Fill the next trace and header.
-	    // hdrBuffer.position(0);
-	    // hdrBuffer.put(_hdrs[j]);
+	    hdrBuffer.position(0);
 	    trcBuffer.position(0);
             writeHeader(litr.next(), hdrByteBuffer );
 	    trcBuffer.put(litr.next().data);
 
 	    // Write the header.
 	    hdrByteBuffer.position(0);
-	    int nWritten = outputChannel.write(hdrByteBuffer);
+	    nWritten = outputChannel.write(hdrByteBuffer);
 	    nbytesWritten += nWritten;
 	    if (nWritten != NBYTES_PER_HDR)
 	      throw new IOException("For file '" + fname

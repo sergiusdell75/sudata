@@ -280,7 +280,7 @@ public class SomKohonen extends JFrame
 	public SomKohonen()
 	{
 		// Create a frame for the background picture and the input
-		JFrame fullWindow = new JFrame("kohonen4j: Self-Organizing Maps in Java");
+		JFrame fullWindow = new JFrame("kohonen: Self-Organizing Maps in Java");
 		fullWindow.setSize (650, 245);
 		fullWindow.setResizable(false);
 		fullWindow.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
