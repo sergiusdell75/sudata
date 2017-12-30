@@ -110,39 +110,39 @@ public class MeanFilterMain {
         int trsize; 
         int maxiz=(int)(zmax/dz);        ///determine the number of the depth points
         int nz=maxiz+1;
-
+        
         OutS.traces = new ArrayList<>();
-        Trace otr =null;
-        otr=new Trace(nz);
+
         data = new float[ns];
-        Trace itr=null;
+        Trace itr=null;    
         itr=new Trace(ns);
         //omp parallel for
         i=0;
         trsize=InS.traces.size();
         for (i=0; i< trsize; i++){
-           itr=InS.traces.get(i);
-           Gx = itr.gx;
-           Sy = itr.sy;
-           Sx = itr.sx;
-           Gy = itr.gy;
+            Trace otr =null;
+            otr=new Trace(nz);
+            itr=InS.traces.get(i);
+            Gx = itr.gx;
+            Sy = itr.sy;
+            Sx = itr.sx;
+            Gy = itr.gy;
            
-	   otr.nt=nz;
-           otr.fldr=i;
-	   otr.gx = (int)Gx;
-           otr.gy = (int)Gy;
-           otr.sx = (int)Sx;
-           otr.sy = (int)Sy;
-           otr.cdp=itr.cdp;
-           otr.delrt=itr.delrt;
-           otr.f1=itr.f1;
-           otr.f2=itr.f2;           
-           otr.dt = (int)(dz*1000);
-           otr.d1=itr.d1;
-           otr.d2=itr.d2;          	   
-           System.out.println("INFO: Processing  current trace : " + String.valueOf(i)
+            otr.nt=nz;
+            otr.fldr=i+1;
+            otr.gx = (int)Gx;
+            otr.gy = (int)Gy;
+            otr.sx = (int)Sx;
+            otr.sy = (int)Sy;
+            otr.cdp=itr.cdp;
+            otr.delrt=itr.delrt;
+            otr.f1=itr.f1;
+            otr.f2=itr.f2;           
+            otr.dt = (int)(dz*1000);
+            otr.d1=itr.d1;
+            otr.d2=itr.d2;          	   
+            if (i%50==0) System.out.println("INFO: Processing  current trace : " + String.valueOf(i+1)
                    + " from " + String.valueOf(trsize) + " trace  is done");
-
 //Loop over all depth points
             for (iz=0; iz < nz; iz++){
                 double ValueMax = 0;
