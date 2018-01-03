@@ -3,10 +3,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
 public class SUdata {
@@ -191,14 +193,18 @@ public class SUdata {
         FileChannel outputChannel = fout.getChannel();
         short dft=1;
         ByteBuffer reelHdrBuffer = ByteBuffer.allocate(LEN_REEL_HDR);
-        String reelHdrBufferStr = "ASCII header:"; 
-        //write 3200 bytes ebdic 
+        CharBuffer reelBuffer = reelHdrBuffer.asCharBuffer();
+        char [] reelHdrBufferStr= new char[1600];
+        makeReelHdrBufferStr(reelHdrBufferStr);
+        reelBuffer.put(reelHdrBufferStr);
+        //write 3200 bytes ebdic   
+        reelHdrBuffer.limit(LEN_REEL_HDR);
         reelHdrBuffer.position(0);
         int nWritten = outputChannel.write(reelHdrBuffer);
         nbytesWritten += nWritten;
         if (nWritten != LEN_REEL_HDR)  
                 throw new IOException("Error writing SEG-Y reel header: " + nWritten + "!=" + LEN_REEL_HDR);
-        System.out.println(reelHdrBufferStr);
+        System.out.println(Arrays.toString(reelHdrBufferStr));
         
         ByteBuffer binaryHdrBuffer = ByteBuffer.allocate(LEN_BINARY_HDR);
         binaryHdrBuffer.putShort(12, (short) ntr);
@@ -286,4 +292,10 @@ public class SUdata {
         }
     }
 
+    private void makeReelHdrBufferStr(char[] reelHdrBufferStr) {
+        for (int i=0; i<40; i++)
+            reelHdrBufferStr[i]='C';
+    }
+
+    
 }
