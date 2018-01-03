@@ -7,6 +7,8 @@ import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import static java.nio.charset.StandardCharsets.US_ASCII;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -84,6 +86,8 @@ public class SUdata {
   public void readFile() throws ClassNotFoundException {
         traces = new ArrayList();
         Trace oneTr=null;
+        int []  dataRHDR;
+        int i=0;            
         try 
         {
             fin=new FileInputStream(fname);
@@ -93,7 +97,19 @@ public class SUdata {
             nbytesRead += nRead;
             if (nRead != LEN_REEL_HDR)  
                 throw new IOException("Error reading SEG-Y reel header: " + nRead + "!=" + LEN_REEL_HDR);
-            //System.out.println("header " + reelHdrBuffer);
+            //IntBuffer reelBuffer=((ByteBuffer) reelHdrBuffer.rewind()).asIntBuffer();
+            Charset CP1047 = Charset.forName("Cp1047");
+            while (reelHdrBuffer.hasRemaining()) 
+                i++;
+            int bufsz=i;
+            dataRHDR = new int [bufsz];
+            i=0;
+            while (reelHdrBuffer.hasRemaining()){
+                dataRHDR[i]=reelHdrBuffer.get();
+                i++;
+            }
+            TypeConverter TC=new TypeConverter(CP1047,US_ASCII,dataRHDR);
+            System.out.println("header " + TC.getConvertedOutput());
             ByteBuffer binaryHdrBuffer = ByteBuffer.allocate(LEN_BINARY_HDR);
             nRead = inputChannel.read(binaryHdrBuffer);
             nbytesRead += nRead;
@@ -293,8 +309,12 @@ public class SUdata {
     }
 
     private void makeReelHdrBufferStr(char[] reelHdrBufferStr) {
-        for (int i=0; i<40; i++)
-            reelHdrBufferStr[i]='C';
+
+        for (int i=0; i< reelHdrBufferStr.length; i++){
+            if (i%40 == 0) reelHdrBufferStr[i]='C';
+            if (i%40 == 39) reelHdrBufferStr[i]='\n';
+        }
+        
     }
 
     

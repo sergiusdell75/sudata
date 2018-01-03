@@ -10,18 +10,9 @@
  * Credits: SonarSource, dev@sonar.codehaus.org
  */
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringReader;
-import java.io.Writer;
+import java.nio.IntBuffer;
 import java.nio.charset.Charset;
 
 public class TypeConverter {
@@ -39,59 +30,39 @@ public class TypeConverter {
   private final Charset ebcdicCharset;
   private final Charset outputCharset;
   private int fixedLength = -1;
-
-  public TypeConverter(Charset ebcdicCharset, Charset outputCharset) {
-    this.ebcdicCharset = ebcdicCharset;
-    this.outputCharset = outputCharset;
+  String convertedOutput;
+  int[] ebcdicInput;
+  
+  public TypeConverter(Charset ebcdicCharset, Charset outputCharset, int[] ebcdicInput) {
+        this.ebcdicInput = ebcdicInput;
+        this.convertedOutput = null;
+        this.ebcdicCharset = ebcdicCharset;
+        this.outputCharset = outputCharset;
   }
+
+    TypeConverter(Charset CP1047, Charset US_ASCII, IntBuffer reelBuffer) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
   public void setFixedLength(int numberOfColumn) {
-    this.fixedLength = numberOfColumn;
+        this.fixedLength = numberOfColumn;
   }
 
-  void convert(File ebcdicInputFile, File convertedOutputFile) {
-    Reader reader = null;
-    Writer writer = null;
-    try {
-      reader = new BufferedReader(new InputStreamReader(new FileInputStream(ebcdicInputFile), ebcdicCharset));
-      int[] ebcdicInput = loadContent(reader);
-      close(reader);
-      writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(convertedOutputFile), outputCharset));
-      convert(ebcdicInput, writer);
-    } catch (Exception e) {
-      throw new EbcdicToAsciiConverterException("Unable to convert file " + ebcdicInputFile.getAbsolutePath(), e);
-    } finally {
-      close(writer);
-    }
-  }
+    String getConvertedOutput() {return this.convertedOutput;};
 
-  private void close(Closeable closeable) {
-    try {
-      if (closeable != null) {
-        closeable.close();
-      }
-    } catch (IOException e) {
-      throw new EbcdicToAsciiConverterException("Unable to close", e);
-    }
-  }
-
-  void convert(String input, Writer convertedOutputWriter) throws IOException {
-    convert(loadContent(new StringReader(input)), convertedOutputWriter);
-  }
-
-  private void convert(int[] ebcdicInput, Writer convertedOutputWriter) throws IOException {
+  private void convert() throws IOException {
     int convertedChar;
     for (int index = 0; index < ebcdicInput.length; index++) {
       int character = ebcdicInput[index];
       if (fixedLength != -1 && index > 0 && index % fixedLength == 0) {
-        convertedOutputWriter.append((char) LF);
+        convertedOutput+= LF;
       }
       if (fixedLength == -1 && character == NEL) {
         convertedChar = LF;
       } else {
         convertedChar = replaceNonPrintableCharacterByWhitespace(character);
       }
-      convertedOutputWriter.append((char) convertedChar);
+      convertedOutput += convertedChar;
     }
   }
 
