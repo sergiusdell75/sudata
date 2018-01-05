@@ -47,6 +47,16 @@ public class SerDellDevLabMain {
             }
             System.out.println(procTag + " Succeeded ... ");
             break;
+            case "som":
+                System.out.println(procTag + " Executing ... ");
+                SomMain mySOM = new SomMain(progParam);
+            try {
+                mySOM.myRun();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(SerDellDevLabMain.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            System.out.println(procTag + " Succeeded ... ");
+            break;
             default:
                 System.out.println("Default ");
         }

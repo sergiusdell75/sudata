@@ -41,7 +41,7 @@ public class MeanFilterMain {
         toParse= str.split("\n");
         toParam=new String[]{"input","output","vel","zmax","dz"};
         parResolve= ParseProcessParameter.parserAllValues(toParse,toParam);
-     };
+     }
    
     String [] toParse;
     String [] toParam;
