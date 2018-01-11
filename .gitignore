@@ -8,3 +8,5 @@ header
 binary
 /test/
 /dist/
+.bin
+.lock

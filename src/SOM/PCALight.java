@@ -21,34 +21,59 @@ import java.io.*;
  */
 public class PCALight {
 
-        private final double[][] data;
-
-    public PCALight() {
+    private double[][] data;
+    private double [][] scores;
+    private int numComps;
+    private final boolean debug;
+    private final boolean verbose;
+    int n1,n2,n3;
+    
+    public PCALight(boolean debug, boolean verbose) {
+        this.numComps = 1;
         this.data = null;
+        this.scores=null;
+        this.debug=debug;
+        this.verbose=verbose;
     }
-	public void process(double[][] data, int numComps, boolean debug, boolean verbose ) {
-		
-//		Uses previous method
-//		double[][] results = Data.principalComponentAnalysis(data, numComps);
-//		System.out.println(numComps + " principal components:");
-//		Matrix.print(results);
-//		saveResults(results, args[0]);
-		
-		double[][] scores = PCAdata.PCANIPALS(data, numComps);
-//		System.out.println("Scores:");
-//		Matrix.print(scores);
+    
+    /**
+     *
+     * @param n1 fast dimension of data
+     * @param n2 slow dimension of data
+     */
+    public void setNs(int n1, int n2) {
+        this.n1=n1;
+        this.n2=n2;
+    }
+    public void setData(double [][] data){
+        int length = data.length;
+        this.data = new double[length][data[0].length];
+        for (int i = 0; i < length; i++) {
+            System.arraycopy(data[i], 0, this.data[i], 0, data[i].length);
+        }
+    }
+    public void setNumComps(int numComps){
+        this.numComps=numComps;
+    }
 
-                
-		if (debug) { 
-                    String filename_din="./debug_pcadata_raw";
-                    String filename_sc="/debug_pcadata_scores";
-                    saveResults(data,filename_din);
-                    saveResults(scores,filename_sc);
-                }
+    /**
+     *
+     * @return
+     */
+    public double [][] getScores(){return this.scores;};
+    
+    public void process() {
+        scores = PCAdata.PCANIPALS(data, numComps);
+	if (debug) { 
+            String filename_din="./debug_pcadata_raw";
+            String filename_sc="/debug_pcadata_scores";
+            saveResults(data,filename_din);
+            saveResults(scores,filename_sc);
+        }
 		
-		if (verbose) 
-                    System.out.println("In PCA part" + PCAmatrix.numMults + " multiplications performed.");
-	}
+        if (verbose) 
+           System.out.println("In PCA part" + PCAmatrix.numMults + " multiplications performed.");
+    }
 	
 	/**
 	 * Uses the file given by filename to construct a table for use by the application.

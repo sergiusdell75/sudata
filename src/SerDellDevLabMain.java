@@ -38,15 +38,24 @@ public class SerDellDevLabMain {
         //main loop over processing options
         switch (procTag) {
             case "msel":
-                System.out.println(procTag + "Executing ");
+                System.out.println(procTag + " Executing ... ");
                 MeanFilterMain MFM = new MeanFilterMain(progParam);
-        {
             try {
                 MFM.myRun();
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(SerDellDevLabMain.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
+            System.out.println(procTag + " Succeeded ... ");
+            break;
+            case "som":
+                System.out.println(procTag + " Executing ... ");
+                SomMain mySOM = new SomMain(progParam);
+            try {
+                mySOM.myRun();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(SerDellDevLabMain.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            System.out.println(procTag + " Succeeded ... ");
             break;
             default:
                 System.out.println("Default ");

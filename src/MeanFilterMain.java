@@ -1,9 +1,6 @@
 
 import java.io.IOException;
-import static java.lang.Math.abs;
-import static java.lang.Math.sqrt;
 import java.util.ArrayList;
-import java.util.ListIterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,7 +41,7 @@ public class MeanFilterMain {
         toParse= str.split("\n");
         toParam=new String[]{"input","output","vel","zmax","dz"};
         parResolve= ParseProcessParameter.parserAllValues(toParse,toParam);
-     };
+     }
    
     String [] toParse;
     String [] toParam;
@@ -99,6 +96,8 @@ public class MeanFilterMain {
     void process(){
         float Gx;	
         float Gy;
+        float Sx;
+        float Sy;
         float Value;
         float Value_temp, Val_down, Val_up;
         float sembl_temp, sembl_n, maxz = 0;
@@ -111,27 +110,39 @@ public class MeanFilterMain {
         int trsize; 
         int maxiz=(int)(zmax/dz);        ///determine the number of the depth points
         int nz=maxiz+1;
-
+        
         OutS.traces = new ArrayList<>();
-        Trace otr =null;
-        otr=new Trace(nz);
+
         data = new float[ns];
-        Trace itr=null;
+        Trace itr=null;    
         itr=new Trace(ns);
         //omp parallel for
         i=0;
         trsize=InS.traces.size();
         for (i=0; i< trsize; i++){
-           itr=InS.traces.get(i);
-           Gx = itr.gx;
-           Gy = itr.gy;
-	   otr.nt=nz;
-	   otr.gx = (int)Gx;
-           otr.gy = (int)Gy;
-	   otr.dt = (int)(dz*1000);
-           System.out.println("INFO: Processing  current trace : " + String.valueOf(i)
+            Trace otr =null;
+            otr=new Trace(nz);
+            itr=InS.traces.get(i);
+            Gx = itr.gx;
+            Sy = itr.sy;
+            Sx = itr.sx;
+            Gy = itr.gy;
+           
+            otr.nt=nz;
+            otr.fldr=i+1;
+            otr.gx = (int)Gx;
+            otr.gy = (int)Gy;
+            otr.sx = (int)Sx;
+            otr.sy = (int)Sy;
+            otr.cdp=itr.cdp;
+            otr.delrt=itr.delrt;
+            otr.f1=itr.f1;
+            otr.f2=itr.f2;           
+            otr.dt = (int)(dz*1000);
+            otr.d1=itr.d1;
+            otr.d2=itr.d2;          	   
+            if (i%50==0) System.out.println("INFO: Processing  current trace : " + String.valueOf(i+1)
                    + " from " + String.valueOf(trsize) + " trace  is done");
-
 //Loop over all depth points
             for (iz=0; iz < nz; iz++){
                 double ValueMax = 0;
