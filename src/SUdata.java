@@ -85,7 +85,6 @@ public class SUdata {
         int rhsize = LEN_REEL_HDR;
         int bsize = LEN_BINARY_HDR;
         int hsize = NBYTES_PER_HDR;
-        int dsize = 0;
         traces = new ArrayList<>();
         Trace oneTr=null;        
         short scalco;
