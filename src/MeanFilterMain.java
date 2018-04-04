@@ -1,9 +1,10 @@
 
 import java.io.IOException;
+import static java.lang.Math.sqrt;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import SOM.*;
 /*
  * Copyright Sergius Dell DevLab
  */
@@ -98,63 +99,84 @@ public class MeanFilterMain {
         float Gy;
         float Sx;
         float Sy;
-        float Value;
-        float Value_temp, Val_down, Val_up;
-        float sembl_temp, sembl_n, maxz = 0;
-        float tt;
         boolean appendTr =false;
         boolean addCheck;
-        int   itemp, iup, idown, isembl, i, iz;
-        float x,y,z;
-        float [] data ;
+        int   ix,iy, i;
+        int   ny,nx,nz;
+        float [] data;
+        float [][][] dataTmp;
+        double [][] Tslice;
         int trsize; 
-        int maxiz=(int)(zmax/dz);        ///determine the number of the depth points
-        int nz=maxiz+1;
+        int maxiz=(int)(zmax/dz);  //determine the number of the depth points
         
+        nz=maxiz+1;
         OutS.traces = new ArrayList<>();
-
         data = new float[ns];
         Trace itr=null;    
         itr=new Trace(ns);
         //omp parallel for
         i=0;
-        trsize=InS.traces.size();
-        for (i=0; i< trsize; i++){
-            Trace otr =null;
-            otr=new Trace(nz);
-            itr=InS.traces.get(i);
-            Gx = itr.gx;
-            Sy = itr.sy;
-            Sx = itr.sx;
-            Gy = itr.gy;
+        trsize=InS.traces.size(); //rectangle for tests
+        ny=(int)sqrt(trsize);
+        nx=ny;
+        dataTmp= new float[ns][nx][ny];  
+        Tslice = new double[nx][ny]; 
+        // for now create 1) empty output in the scratch and 2) 3D temporary matrix
+        // 
+        i=0;
+        for (iy=0; iy<ny;iy++) { 
+            for (ix=0; ix<nx;ix++) {
+                i=ix+iy*nx; //  limited to trsize
+                Trace otr =null;
+                otr=new Trace(ns);
+                itr=InS.traces.get(i);
+                Gx = itr.gx;
+                Sy = itr.sy;
+                Sx = itr.sx;
+                Gy = itr.gy;
            
-            otr.nt=nz;
-            otr.fldr=i+1;
-            otr.gx = (int)Gx;
-            otr.gy = (int)Gy;
-            otr.sx = (int)Sx;
-            otr.sy = (int)Sy;
-            otr.cdp=itr.cdp;
-            otr.delrt=itr.delrt;
-            otr.f1=itr.f1;
-            otr.f2=itr.f2;           
-            otr.dt = (int)(dz*1000);
-            otr.d1=itr.d1;
-            otr.d2=itr.d2;          	   
-            if (i%50==0) System.out.println("INFO: Processing  current trace : " + String.valueOf(i+1)
+                otr.nt=ns;
+                otr.fldr=i+1;
+                otr.gx = (int)Gx;
+                otr.gy = (int)Gy;
+                otr.sx = (int)Sx;
+                otr.sy = (int)Sy;
+                otr.cdp=itr.cdp;
+                otr.delrt=itr.delrt;
+                otr.f1=itr.f1;
+                otr.f2=itr.f2;           
+                otr.dt = (int)(dt*1000);
+                otr.d1=itr.d1;
+                otr.d2=itr.d2;          	   
+                if (i%50==0) System.out.println("INFO: Processing  current trace : " + String.valueOf(i+1)
                    + " from " + String.valueOf(trsize) + " trace  is done");
 //Loop over all depth points
-            for (iz=0; iz < nz; iz++){
-                double ValueMax = 0;
                 System.arraycopy(itr.data, 0, data, 0, ns);
-                for (int ii=0; ii<ns; ii++) ValueMax+=data[ii];
-                otr.data[iz] = (float) ValueMax; /// write value for z
+                for (int ii=0; ii<ns; ii++) {
+                    otr.data[ii]=0.0f;
+                    dataTmp[ii][ix][iy]=data[ii];
+                }
+                if (appendTr)
+                    try{OutS.appendTrace(Outfile,otr);} catch (IOException ex) {}
+                else
+                     addCheck = OutS.traces.add(otr);     
             }
-            if (appendTr)
-                try{OutS.appendTrace(Outfile,otr);} catch (IOException ex) {}
-            else
-                 addCheck = OutS.traces.add(otr);     
-        }  
+        }
+        // start PCA and 
+        for (int ii=0; ii<ns; ii++) {     
+            for (iy=0; iy<ny;iy++) { 
+                for (ix=0; ix<nx;ix++) {
+                    Tslice[ix][iy]=(double)dataTmp[ii][ix][iy];
+                }
+            }
+            PCALight tPCA=new PCALight(false,false);
+            tPCA.setNs(nx,nz);
+            tPCA.setData(Tslice);
+            tPCA.setNumComps(1);
+            tPCA.process();
+            Tslice=tPCA.getScores();
+        }
+        
         if (appendTr) {
             System.out.println("Data is in the scratch");
         } else {

@@ -199,7 +199,7 @@ public class SUdata {
             hdrByteBuffer.putInt(80,tr.gx);
             hdrByteBuffer.putInt(84,tr.gy);
             hdrByteBuffer.putInt(180,(int)tr.f1);
-            hdrByteBuffer.putInt(184,(int)tr.f1);
+            hdrByteBuffer.putInt(184,(int)tr.f2);
             hdrByteBuffer.putInt(188,(int)tr.d1);
             hdrByteBuffer.putInt(192,(int)tr.d2);
     
