@@ -84,6 +84,7 @@ public class SUdata {
     }
     
   public void readFile() throws ClassNotFoundException {
+
         traces = new ArrayList();
         Trace oneTr=null;
         int []  dataRHDR;
